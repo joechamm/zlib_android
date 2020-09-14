@@ -1,4 +1,4 @@
-cmake_minimum_version(VERSION 3.15)
+cmake_minimum_required(VERSION 3.15)
 
 project(zlib_android C)
 
@@ -57,17 +57,22 @@ set(gcc_like_c "$<COMPILE_LANG_AND_ID:C,ARMCC,ARMClang,Clang,GNU>")
 set(msvc_c "$<COMPILE_LANG_AND_ID:C,MSVC>")
 
 target_compile_options(zlib_android_compile_flags INTERFACE
-	"$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
-	"$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
+	"$<${gcc_like_c}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wformat=2;-Wunused>>"
+	"$<${msvc_c}:$<BUILD_INTERFACE:-W3>>"
 	)
 
 set(CMAKE_SYSTEM_NAME Android)
 set(CMAKE_ANDROID_NDK /home/joechamm/snap/androidsdk/current/AndroidSDK/ndk-bundle)
 
-option(CMAKE_SYSTEM_VERSION "Android Platform Version (valid range 16-30)" 21) # API level
-option(CMAKE_ANDROID_ARCH_ABI "Android ABI (armeabi-v7a, arm64-v8a, x86, x86_64)" arm64-v8a)
-option(CMAKE_ANDROID_STL_TYPE "Android STL Type (gnustl_static, gnustl_shared, c++_static, c++_shared)" gnustl_static)
+#option(CMAKE_SYSTEM_VERSION "Android Platform Version (valid range 16-30)" 21) # API level
+#option(CMAKE_ANDROID_ARCH_ABI "Android ABI (armeabi-v7a, arm64-v8a, x86, x86_64)" arm64-v8a)
+#option(CMAKE_ANDROID_STL_TYPE "Android STL Type (gnustl_static, gnustl_shared, c++_static, c++_shared)" gnustl_static)
+
 option(BUILD_SHARED_LIBS "Shared Libraries" ON)
+
+set(CMAKE_SYSTEM_VERSION 21)
+set(CMAKE_ANDROID_ARCH_ABI arm64-v8a)
+set(CMAKE_ANDROID_STL_TYPE gnustl_static)
 
 set(INSTALL_BIN_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_ANDROID_ARCH_ABI}/bin" CACHE PATH "Installation directory for executables")
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/${CMAKE_ANDROID_ARCH_ABI}/lib" CACHE PATH "Installation directory for libraries")
@@ -83,7 +88,7 @@ if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
 	if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/zconf.h)
 		message(STATUS "Renaming")
 		message(STATUS "	${CMAKE_CURRENT_SOURCE_DIR}/zconf.h")
-		message(STATUS "to 'zconf.h.included" because this file is included with zlib")
+		message(STATUS "to 'zconf.h.included' because this file is included with zlib")
 		message(STATUS "but Cmake generates it automatically in the build directory.")
 		file(RENAME ${CMAKE_CURRENT_SOURCE_DIR}/zconf.h ${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.included)
 	endif()
@@ -204,6 +209,8 @@ endif()
 set_target_properties(zlib PROPERTIES VERSION ${ZLIB_ANDROID_FULL_VERSION})
 set_target_properties(zlib PROPERTIES OUTPUT_NAME z)
 set_target_properties(zlib PROPERTIES LINK_FLAGS "-Wl,--version-script,\"${CMAKE_CURRENT_SOURCE_DIR}/zlib.map\"")
+
+target_link_libraries(zlib zlib_android_compile_flags) 
 
 if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL)
 	install(TARGETS zlib
